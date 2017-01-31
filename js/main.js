@@ -296,17 +296,19 @@
         //waiting事件
         $(this.id + " .danmu-video").on('waiting', {that: that}, function (e) {
 
+            var uuid = Date.now();
+            that.uuidSet.add(uuid);
             if ($(e.data.that.id + " .danmu-video").get(0).currentTime == 0) {
                 $(e.data.that.id + " .danmu-div").data("nowTime", 0);
                 $(e.data.that.id + " .danmu-div").data("danmuPause");
                 e.data.that.client.send(JSON.stringify({
-                    "cmd": "pause"
+                    "cmd": "pause", "uuid": uuid
                 }));
             } else {
                 $(e.data.that.id + " .danmu-div").data("nowTime", parseInt($(e.data.that.id + " .danmu-video").get(0).currentTime) * 10);
                 $(e.data.that.id + " .danmu-div").data("danmuPause");
                 e.data.that.client.send(JSON.stringify({
-                    "cmd": "pause"
+                    "cmd": "pause", "uuid": uuid
                 }));
             }
             $(e.data.that.id + " .danmu-player-load").css("display", "block");
