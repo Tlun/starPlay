@@ -23,10 +23,11 @@
         this.client.onmessage = function (event) {
             var wsMessage = JSON.parse(event.data);
             var cmd = wsMessage["cmd"];
+            if (that.uuidSet.has(wsMessage["uuid"])) {
+                return
+            }
             if (cmd == "message") {
-                if (!that.uuidSet.has(wsMessage["uuid"])) {
-                    that.sendDanmuBase(that, wsMessage["msg"], false)
-                }
+                that.sendDanmuBase(that, wsMessage["msg"], false)
             } else if (cmd == "resume") {
                 if (that.video.paused) {
                     that.playPauseBase(that.video, that);
@@ -217,11 +218,16 @@
 
         //playpausebase
         this.playPauseBase = function (video, that) {
+            var uuid = Date.now();
+            that.uuidSet.add(uuid);
+
             if (video.paused) {
                 video.play();
                 $(that.id + " .danmu-div").danmu('danmuResume');
+
                 that.client.send(JSON.stringify({
-                    "cmd": "resume"
+                    "cmd": "resume",
+                    "uuid": uuid
                 }));
                 $(that.id + " .play-btn span").removeClass("glyphicon-play").addClass("glyphicon-pause");
             }
@@ -229,7 +235,8 @@
                 video.pause();
                 $(that.id + " .danmu-div").danmu('danmuPause');
                 that.client.send(JSON.stringify({
-                    "cmd": "pause"
+                    "cmd": "pause",
+                    "uuid": uuid
                 }));
                 $(that.id + " .play-btn span").removeClass("glyphicon-pause").addClass("glyphicon-play");
             }
