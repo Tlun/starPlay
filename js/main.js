@@ -30,11 +30,11 @@
                 that.sendDanmuBase(that, wsMessage["msg"], false)
             } else if (cmd == "resume") {
                 if (that.video.paused) {
-                    that.playPauseBase(that.video, that);
+                    that.playPauseBase(that.video, that, false);
                 }
             } else if (cmd == "pause") {
                 if (!that.video.paused) {
-                    that.playPauseBase(that.video, that);
+                    that.playPauseBase(that.video, that, false);
                 }
             }
         };
@@ -217,34 +217,37 @@
         };
 
         //playpausebase
-        this.playPauseBase = function (video, that) {
+        this.playPauseBase = function (video, that, sendwebsocket) {
             var uuid = Date.now();
             that.uuidSet.add(uuid);
 
             if (video.paused) {
                 video.play();
                 $(that.id + " .danmu-div").danmu('danmuResume');
-
-                that.client.send(JSON.stringify({
-                    "cmd": "resume",
-                    "uuid": uuid
-                }));
+                if (sendwebsocket) {
+                    that.client.send(JSON.stringify({
+                        "cmd": "resume",
+                        "uuid": uuid
+                    }));
+                }
                 $(that.id + " .play-btn span").removeClass("glyphicon-play").addClass("glyphicon-pause");
             }
             else {
                 video.pause();
                 $(that.id + " .danmu-div").danmu('danmuPause');
-                that.client.send(JSON.stringify({
-                    "cmd": "pause",
-                    "uuid": uuid
-                }));
+                if (sendwebsocket) {
+                    that.client.send(JSON.stringify({
+                        "cmd": "pause",
+                        "uuid": uuid
+                    }));
+                }
                 $(that.id + " .play-btn span").removeClass("glyphicon-pause").addClass("glyphicon-play");
             }
         };
 
         //播放暂停
         this.playPause = function (e) {
-            this.playPauseBase(e.data.video, e.data.that)
+            this.playPauseBase(e.data.video, e.data.that, true)
         };
 
         //主计时器
