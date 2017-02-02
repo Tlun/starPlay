@@ -10,7 +10,7 @@
 
 ;
 (function ($) {
-    var initWebsocket = function(danmup, addr) {
+    var initWebsocket = function (danmup, addr) {
         // websocket
         danmup.client = new WebSocket(addr);
         danmup.uuidSet = new Set();
@@ -293,7 +293,6 @@
             });
         });
 
-
         //播放事件
         $(this.id + " .play-btn").on("click", {video: this.video, that: that}, function (e) {
             that.playPause(e);
@@ -305,7 +304,7 @@
 
         //waiting事件
         $(this.id + " .danmu-video").on('waiting', {that: that}, function (e) {
-
+            console.log("waiting")
             var uuid = Date.now();
             that.uuidSet.add(uuid);
             if ($(e.data.that.id + " .danmu-video").get(0).currentTime == 0) {
@@ -322,12 +321,11 @@
                 }));
             }
             $(e.data.that.id + " .danmu-player-load").css("display", "block");
-
         });
 
         //playing事件
         $(this.id + " .danmu-video").on('play playing', {that: that}, function (e) {
-
+            console.log("play playing")
             if ($(e.data.that.id + " .danmu-video").get(0).currentTime == 0) {
                 $(e.data.that.id + " .danmu-div").data("nowTime", 0);
                 $(e.data.that.id + " .danmu-div").data("danmuResume");
@@ -336,12 +334,17 @@
                 $(e.data.that.id + " .danmu-div").data("danmuResume");
             }
             $(e.data.that.id + " .danmu-player-load").css("display", "none");
-
+            var uuid = Date.now();
+            that.uuidSet.add(uuid);
+            e.data.that.client.send(JSON.stringify({
+                "cmd": "resume", "uuid": uuid
+            }));
         });
 
 
         //seeked事件
         $(this.id + " .danmu-video").on('seeked ', {that: that}, function (e) {
+            console.log("seeked")
             $(e.data.that.id + " .danmu-div").danmu("danmuHideAll");
         });
 
@@ -401,6 +404,7 @@
 
         //时间改变事件
         $(this.id + " .danmu-video").on('loadedmetadata', {video: this.video, that: that}, function (e) {
+            console.log("loadedmetadata")
             e.data.that.duration = e.data.video.duration;
             var duraMin = parseInt(e.data.that.duration / 60);
             var duraSec = parseInt(e.data.that.duration % 60) < 10 ? "0" + parseInt(e.data.that.duration % 60) : parseInt(e.data.that.duration % 60);
@@ -424,6 +428,7 @@
 
         //进度条事件
         $(this.id + " .ctrl-progress").on('click', {video: this.video, that: that}, function (e) {
+            console.log("progress click")
             var sumLen = $(e.data.that.id + " .ctrl-progress").width();
             var pos = e.pageX - $(e.data.that.id + " .ctrl-progress").offset().left;
             var percentage = pos / sumLen;

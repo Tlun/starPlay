@@ -7,24 +7,44 @@
     <link href="css/colpick.css" rel="stylesheet">
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/main.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <!--<link rel="stylesheet" href="../dist/css/danmuplayer.css">-->
 </head>
 <body>
-<div id="danmup" style="left: 50%;margin-left:-400px;top:100px">
+<div>
+    <div class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Video Src</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="video_url" value="mp4/test3.mp4">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="submit_video_url" class="btn btn-primary">Save changes</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
+    <div id="danmup" style="left: 50%;margin-left:-400px;top:100px">
+
+
+    </div>
+    <div style="display: none">
+        <span class="glyphicon" aria-hidden="true">&#xe072</span>
+        <span class="glyphicon" aria-hidden="true">&#xe073</span>
+        <span class="glyphicon" aria-hidden="true">&#xe242</span>
+        <span class="glyphicon" aria-hidden="true">&#xe115</span>
+        <span class="glyphicon" aria-hidden="true">&#xe111</span>
+        <span class="glyphicon" aria-hidden="true">&#xe096</span>
+        <span class="glyphicon" aria-hidden="true">&#xe097</span>
+    </div>
 
 </div>
-<div style="display: none">
-    <span class="glyphicon" aria-hidden="true">&#xe072</span>
-    <span class="glyphicon" aria-hidden="true">&#xe073</span>
-    <span class="glyphicon" aria-hidden="true">&#xe242</span>
-    <span class="glyphicon" aria-hidden="true">&#xe115</span>
-    <span class="glyphicon" aria-hidden="true">&#xe111</span>
-    <span class="glyphicon" aria-hidden="true">&#xe096</span>
-    <span class="glyphicon" aria-hidden="true">&#xe097</span>
-</div>
-
-
 </body>
 <script src="js/jquery-2.1.4.min.js"></script>
 <script src="js/jquery.shCircleLoader.js"></script>
@@ -32,15 +52,27 @@
 <script src="js/colpick.js"></script>
 <script src="js/jquery.danmu.js"></script>
 <script src="js/main.js"></script>
+<script src="js/bootstrap.min.js"></script>
 <!--<script src="../dist/js/danmuplayer.min.js"></script>-->
 <script>
-    $("#danmup").DanmuPlayer({
-        src: "mp4/test3.mp4",
-        height: "480px", //区域的高度
-        width: "800px", //区域的宽度
-        //websocket: "ws://localhost:8888/chat",
-	    websocket: "ws://192.241.204.159:8010/chat",
+    $(document).ready(function () {
+        $(".modal").modal("show");
+        $("#submit_video_url").click(function (e) {
+            var video_url = $("#video_url").val().trim();
+            if (video_url.length != 0) {
+                $(".modal").modal("hide");
+                $("#danmup").DanmuPlayer({
+                    src: video_url,
+                    height: "480px", //区域的高度
+                    width: "800px", //区域的宽度
+                    //websocket: "ws://localhost:8888/chat",
+                    websocket: "ws://192.241.204.159:8010/chat"
+                });
+            }
+        });
+
     });
+
 
 </script>
 </html>
