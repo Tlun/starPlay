@@ -10,34 +10,44 @@
 
 ;
 (function ($) {
-
+    var initWebsocket = function(danmup, addr) {
+        // websocket
+        danmup.client = new WebSocket(addr);
+        danmup.uuidSet = new Set();
+        danmup.client.onmessage = function (event) {
+            var wsMessage = JSON.parse(event.data);
+            var cmd = wsMessage["cmd"];
+            if (danmup.uuidSet.has(wsMessage["uuid"])) {
+                return
+            }
+            if (cmd == "message") {
+                danmup.sendDanmuBase(danmup, wsMessage["msg"], false)
+            } else if (cmd == "resume") {
+                if (danmup.video.paused) {
+                    danmup.playPauseBase(danmup.video, danmup, false);
+                }
+            } else if (cmd == "pause") {
+                if (!danmup.video.paused) {
+                    danmup.playPauseBase(danmup.video, danmup, false);
+                }
+            }
+        };
+        danmup.client.onerror = function (event) {
+            console.log(event);
+            alert("websocket connection error")
+        };
+        danmup.client.onclose = function (event) {
+            console.log("websocket closed, reconnecting", event);
+            initWebsocket(danmup, addr)
+        };
+    };
 
     var DanmuPlayer = function (element, options) {
         this.$element = $(element);
         this.options = options;
         $(element).data("paused", 1);
         var that = this;
-        // websocket
-        this.client = new WebSocket(options.websocket);
-        this.uuidSet = new Set();
-        this.client.onmessage = function (event) {
-            var wsMessage = JSON.parse(event.data);
-            var cmd = wsMessage["cmd"];
-            if (that.uuidSet.has(wsMessage["uuid"])) {
-                return
-            }
-            if (cmd == "message") {
-                that.sendDanmuBase(that, wsMessage["msg"], false)
-            } else if (cmd == "resume") {
-                if (that.video.paused) {
-                    that.playPauseBase(that.video, that, false);
-                }
-            } else if (cmd == "pause") {
-                if (!that.video.paused) {
-                    that.playPauseBase(that.video, that, false);
-                }
-            }
-        };
+        initWebsocket(this, options.websocket);
 
         //播放器全局样式
         this.$element.css({
