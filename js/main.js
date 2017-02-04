@@ -237,7 +237,7 @@
                 $.post(that.options.urlToPostDanmu, {
                     danmu: textObj
                 });
-            textObj = '{ "text":"' + text + '","color":"' + color + '","size":"' + size + '","position":"' + position + '","time":' + time + ',"isnew":""}';
+            textObj = '{ "text":"' + text + '","color":"' + color + '","size":"' + size + '","position":"' + position + '","time":' + time}';
             var newObj = eval('(' + textObj + ')');
             $(that.id + " .danmu-div").danmu("immediateDanmu", newObj);
             $(that.id + " .danmu-input").get(0).value = '';
