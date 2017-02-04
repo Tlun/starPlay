@@ -142,7 +142,6 @@
         this.$ctrlMain.append('<input class="danmu-input ctrl-btn"   type="textarea" id="danmu_text" max=300 />'); // -> button あ
         this.$ctrlMain.append('<div class=" send-btn  ctrl-btn"  >发送 ></div>');
         this.$ctrlMain.append('<div class="full-screen   ctrl-btn-right"><span class=" glyphicon glyphicon-resize-full" aria-hidden="true"></span></div>');
-        this.$ctrlMain.append('<div class="loop-btn   ctrl-btn-right"><span class="glyphicon glyphicon-retweet" aria-hidden="true"></span></div>');
         this.$ctrlMain.append('<div class="show-danmu  ctrl-btn-right ctrl-btn-right-active"><span class="glyphicon glyphicon-comment" aria-hidden="true"></span></div>');
         this.$ctrlMain.append('<div class="opacity ctrl-btn-right"><input class="ctrl-btn-right danmu-op" value="100" type="range" /></div>');
         $("body").append('<div id="' + this.id.slice(1, this.id.length) + 'fontTip"  hidden="true">' +
@@ -160,7 +159,6 @@
         this.duration = this.video.duration;  //总时间
         this.danmuPlayerFullScreen = false;
         this.danmuShowed = true;
-        this.isLoop = false;
         this.danmuSize = 0;
         this.danmuColor = this.options.defaultColor;
         this.danmuPosition = 0;
@@ -411,21 +409,6 @@
                 $(e.data.that.id + " .show-danmu").addClass("ctrl-btn-right-active");
             }
 
-        });
-
-        //循环播放按钮事件
-        $(this.id + " .loop-btn").on("click", {that: that}, function (e) {
-            if (!e.data.that.isLoop) {
-                e.data.that.video.loop = true;
-                e.data.that.isLoop = true;
-                $(e.data.that.id + " .loop-btn").addClass("ctrl-btn-right-active");
-            }
-            else {
-                e.data.that.video.loop = true;
-                e.data.that.isLoop = false;
-
-                $(e.data.that.id + " .loop-btn").removeClass("ctrl-btn-right-active");
-            }
         });
 
         //时间改变事件
