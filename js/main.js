@@ -14,8 +14,10 @@
         // websocket
         danmup.client = new WebSocket(addr);
         danmup.uuidSet = new Set();
+        danmup.isWebsocketSeeking = false;
         danmup.client.onmessage = function (event) {
             var wsMessage = JSON.parse(event.data);
+            console.log("received wsmessage", wsMessage)
             var cmd = wsMessage["cmd"];
             if (danmup.uuidSet.has(wsMessage["uuid"])) {
                 return
@@ -30,6 +32,22 @@
                 if (!danmup.video.paused) {
                     danmup.playPauseBase(danmup.video, danmup, false);
                 }
+            } else if (cmd == "seek") {
+                // 暂停后切换到指定时间
+                if (!danmup.video.paused) {
+                    danmup.playPauseBase(danmup.video, danmup, false);
+                }
+                danmup.isWebsocketSeeking = true;
+                percentage = wsMessage["seekTime"] / danmup.video.duration;
+
+                // 进度条显示
+                $(danmup.id + '.danmu-player .ctrl-progress .current ').css('width', percentage * 100 + '%');
+                danmup.video.currentTime = wsMessage["seekTime"]
+            } else if (cmd == "join") {
+                // 加入时暂停所有人播放
+                if (!danmup.video.paused) {
+                    danmup.playPauseBase(danmup.video, danmup, false);
+                }
             }
         };
         danmup.client.onerror = function (event) {
@@ -38,8 +56,29 @@
         };
         danmup.client.onclose = function (event) {
             console.log("websocket closed, reconnecting", event);
-            initWebsocket(danmup, addr)
+            initWebsocket(danmup, addr);
+            console.log("websocket reconnected")
         };
+        danmup.client.sendResume = function () {
+            var uuid = Date.now();
+            danmup.uuidSet.add(uuid);
+            this.send(JSON.stringify({"cmd": "resume", "uuid": uuid}))
+        }
+        danmup.client.sendPause = function () {
+            var uuid = Date.now();
+            danmup.uuidSet.add(uuid);
+            this.send(JSON.stringify({"cmd": "pause", "uuid": uuid}))
+        }
+        danmup.client.sendMessage = function (message) {
+            var uuid = Date.now();
+            danmup.uuidSet.add(uuid);
+            this.send(JSON.stringify({"cmd": "message", "msg": message, "uuid": uuid}))
+        }
+        danmup.client.sendSeek = function (seekTime) {
+            var uuid = Date.now();
+            danmup.uuidSet.add(uuid);
+            this.send(JSON.stringify({"cmd": "seek", "seekTime": seekTime, "uuid": uuid}))
+        }
     };
 
     var DanmuPlayer = function (element, options) {
@@ -198,7 +237,7 @@
             var color = that.danmuColor;
             var position = $(that.id + " input[name=danmu_position]:checked").val();
             var size = $(that.id + " input[name=danmu_size]:checked").val();
-            var time = $(that.id + " .danmu-div").data("nowTime") + 3;
+            var time = $(that.id + " .danmu-div").data("nowTime") + 2;
             var textObj = '{ "text":"' + text + '","color":"' + color + '","size":"' + size + '","position":"' + position + '","time":' + time + '}';
             if (that.options.urlToPostDanmu)
                 $.post(that.options.urlToPostDanmu, {
@@ -206,17 +245,13 @@
                 });
             textObj = '{ "text":"' + text + '","color":"' + color + '","size":"' + size + '","position":"' + position + '","time":' + time + ',"isnew":""}';
             var newObj = eval('(' + textObj + ')');
-            $(that.id + " .danmu-div").danmu("addDanmu", newObj);
+            $(that.id + " .danmu-div").danmu("immediateDanmu", newObj);
             $(that.id + " .danmu-input").get(0).value = '';
             //触发事件
             $(that).trigger("senddanmu");
 
             if (sendwebsocket) {
-                var uuid = Date.now();
-                that.uuidSet.add(uuid);
-                that.client.send(JSON.stringify({
-                    "cmd": "message", "msg": text, "uuid": uuid
-                }))
+                that.client.sendMessage(text);
             }
         };
 
@@ -235,10 +270,7 @@
                 video.play();
                 $(that.id + " .danmu-div").danmu('danmuResume');
                 if (sendwebsocket) {
-                    that.client.send(JSON.stringify({
-                        "cmd": "resume",
-                        "uuid": uuid
-                    }));
+                    that.client.sendResume()
                 }
                 $(that.id + " .play-btn span").removeClass("glyphicon-play").addClass("glyphicon-pause");
             }
@@ -246,10 +278,7 @@
                 video.pause();
                 $(that.id + " .danmu-div").danmu('danmuPause');
                 if (sendwebsocket) {
-                    that.client.send(JSON.stringify({
-                        "cmd": "pause",
-                        "uuid": uuid
-                    }));
+                    that.client.sendPause()
                 }
                 $(that.id + " .play-btn span").removeClass("glyphicon-pause").addClass("glyphicon-play");
             }
@@ -299,7 +328,6 @@
         });
         $(this.id + " .danmu-div").on("click", {video: this.video, that: that}, function (e) {
             that.playPause(e);
-
         });
 
         //waiting事件
@@ -310,15 +338,11 @@
             if ($(e.data.that.id + " .danmu-video").get(0).currentTime == 0) {
                 $(e.data.that.id + " .danmu-div").data("nowTime", 0);
                 $(e.data.that.id + " .danmu-div").data("danmuPause");
-                e.data.that.client.send(JSON.stringify({
-                    "cmd": "pause", "uuid": uuid
-                }));
+                that.client.sendPause()
             } else {
                 $(e.data.that.id + " .danmu-div").data("nowTime", parseInt($(e.data.that.id + " .danmu-video").get(0).currentTime) * 10);
                 $(e.data.that.id + " .danmu-div").data("danmuPause");
-                e.data.that.client.send(JSON.stringify({
-                    "cmd": "pause", "uuid": uuid
-                }));
+                that.client.sendPause()
             }
             $(e.data.that.id + " .danmu-player-load").css("display", "block");
         });
@@ -336,16 +360,22 @@
             $(e.data.that.id + " .danmu-player-load").css("display", "none");
             var uuid = Date.now();
             that.uuidSet.add(uuid);
-            e.data.that.client.send(JSON.stringify({
-                "cmd": "resume", "uuid": uuid
-            }));
+            that.client.sendResume()
         });
 
 
         //seeked事件
-        $(this.id + " .danmu-video").on('seeked ', {that: that}, function (e) {
+        $(this.id + " .danmu-video").on('seeked ', {video: that.video, that: that}, function (e) {
             console.log("seeked")
             $(e.data.that.id + " .danmu-div").danmu("danmuHideAll");
+
+            // 发送seeked到websocket
+            if (!that.isWebsocketSeeking) {
+                that.client.sendMessage("对方切换到" + e.data.video.currentTime);
+                that.client.sendSeek(e.data.video.currentTime)
+            } else {
+                that.isWebsocketSeeking = false
+            }
         });
 
 
@@ -413,6 +443,7 @@
                 video: e.data.video,
                 that: e.data.that
             }, function (e) {
+                console.log("timeupdate", e)
                 var current = e.data.that.current = e.data.video.currentTime;
                 var curMin = parseInt(current / 60);
                 var curSec = parseInt(current % 60) < 10 ? "0" + parseInt(current % 60) : parseInt(current % 60);
@@ -428,13 +459,18 @@
 
         //进度条事件
         $(this.id + " .ctrl-progress").on('click', {video: this.video, that: that}, function (e) {
-            console.log("progress click")
+            console.log("progress click", e)
             var sumLen = $(e.data.that.id + " .ctrl-progress").width();
             var pos = e.pageX - $(e.data.that.id + " .ctrl-progress").offset().left;
             var percentage = pos / sumLen;
             $(e.data.that.id + '.danmu-player .ctrl-progress .current ').css('width', percentage * 100 + '%');
             aimTime = parseFloat(percentage * e.data.that.duration);
             e.data.video.currentTime = aimTime;
+
+            // 切换进度之后停止播放
+            if (!e.data.video.paused) {
+                that.playPauseBase(e.data.video, e.data.that, false)
+            }
         });
         var timeDrag = false;
         $(this.id + " .ctrl-progress").on('mousedown touchstart', function (e) {
