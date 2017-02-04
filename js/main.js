@@ -270,7 +270,6 @@
             }
             else {
                 video.pause();
-                $(that.id + " .danmu-div").danmu('danmuPause');
                 if (sendwebsocket) {
                     that.client.sendPause()
                 }
@@ -331,11 +330,9 @@
             that.uuidSet.add(uuid);
             if ($(e.data.that.id + " .danmu-video").get(0).currentTime == 0) {
                 $(e.data.that.id + " .danmu-div").data("nowTime", 0);
-                $(e.data.that.id + " .danmu-div").data("danmuPause");
                 that.client.sendPause()
             } else {
                 $(e.data.that.id + " .danmu-div").data("nowTime", parseInt($(e.data.that.id + " .danmu-video").get(0).currentTime) * 10);
-                $(e.data.that.id + " .danmu-div").data("danmuPause");
                 that.client.sendPause()
             }
             $(e.data.that.id + " .danmu-player-load").css("display", "block");
