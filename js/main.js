@@ -187,10 +187,6 @@
             appendTo: this.id,
             content: '开启/关闭 弹幕'
         });
-        $(this.id + " .loop-btn").scojs_tooltip({
-            appendTo: this.id,
-            content: '循环播放'
-        });
         $(this.id + " .full-screen").scojs_tooltip({
             appendTo: this.id,
             content: '全屏'
