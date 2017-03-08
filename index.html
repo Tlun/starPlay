@@ -23,7 +23,9 @@
                 <div class="modal-body">
 
                     <!--<input type="text" class="form-control" id="video_url" value="http://172.16.7.169/mp4/FOB.mp4">-->
-                    <input type="text" class="form-control" id="video_url" value="http://192.241.204.159:8010/resources/20160518_152705.mp4">
+                    <input type="text" class="form-control" id="video_url"
+                           value="http://192.241.204.159:8010/resources/20160518_152705.mp4">
+                    <input id="video-file-input" type="file" accept="video/*"/>
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="submit_video_url" class="btn btn-primary">Save changes</button>
@@ -63,15 +65,42 @@
             var video_url = $("#video_url").val().trim();
             if (video_url.length != 0) {
                 $(".modal").modal("hide");
+                +
+                    $("#danmup").DanmuPlayer({
+                        src: video_url,
+                        height: "480px", //区域的高度
+                        width: "800px", //区域的宽度
+                        //websocket: "ws://localhost:8888/chat",
+                        websocket: "ws://192.241.204.159:8010/chat"
+                    });
+            }
+        });
+
+        (function localFileVideoPlayer() {
+            var URL = window.URL || window.webkitURL
+            var displayMessage = function (message, isError) {
+                var element = document.querySelector('#message')
+                element.innerHTML = message
+                element.className = isError ? 'error' : 'info'
+            }
+            var playSelectedFile = function (event) {
+                var file = this.files[0]
+
+                var fileURL = URL.createObjectURL(file)
+
+                $(".modal").modal("hide");
                 $("#danmup").DanmuPlayer({
-                    src: video_url,
+                    src: fileURL,
                     height: "480px", //区域的高度
                     width: "800px", //区域的宽度
                     //websocket: "ws://localhost:8888/chat",
                     websocket: "ws://192.241.204.159:8010/chat"
                 });
+
             }
-        });
+            var inputNode = document.getElementById("video-file-input")
+            inputNode.addEventListener('change', playSelectedFile, false)
+        })()
 
     });
 
